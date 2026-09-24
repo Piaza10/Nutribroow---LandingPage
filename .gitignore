@@ -1,8 +1,8 @@
 node_modules/
+frontend/.npm-cache/
 dist/
 coverage/
 .env
 .env.*
 !.env.example
 supabase/.temp/
-
