@@ -1,0 +1,6 @@
+.hero-art { position: relative; overflow: hidden; padding: 0; background: #2a211b; }
+.hero-art img { width: 100%; height: 100%; min-height: 400px; display: block; object-fit: cover; object-position: 58% center; }
+.hero-art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, rgba(23, 20, 17, .78)); pointer-events: none; }
+.hero-art figcaption { position: absolute; inset: auto 25px 25px; z-index: 1; padding: 0; background: transparent; width: auto; color: #fff; font-size: 1rem; }
+.hero-art figcaption strong { font-size: 2.4rem; }
+@media (max-width: 760px) { .hero-art img { min-height: 300px; object-position: center 35%; } }
