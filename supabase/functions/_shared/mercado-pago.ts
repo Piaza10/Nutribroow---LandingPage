@@ -39,7 +39,7 @@ export const createPreference = async (accessToken: string, body: PreferenceInpu
     method: 'POST', headers: { authorization: `Bearer ${accessToken}`, 'content-type': 'application/json' }, body: JSON.stringify(body),
   })
   const payload = await response.json().catch(() => null) as PreferenceResponse | null
-  if (!response.ok || !payload?.id || !payload.init_point) throw new Error('mercado_pago_preference_failed')
+  if (!response.ok || !payload?.id || !payload.init_point) throw new Error(`mercado_pago_preference_${response.status}`)
   return { id: payload.id, initPoint: payload.init_point }
 }
 

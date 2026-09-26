@@ -6,6 +6,14 @@ const json = (body: unknown, status = 200, origin?: string) => new Response(JSON
 const fail = (error: PublicError, status: number, origin?: string) => json({ error }, status, origin)
 const allowed = () => (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((value) => value.trim()).filter(Boolean)
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const errorSummary = (error: unknown) => {
+  if (error instanceof Error) return error.message
+  if (error && typeof error === 'object') {
+    const record = error as { code?: unknown; message?: unknown }
+    return JSON.stringify({ code: record.code ?? null, message: record.message ?? null })
+  }
+  return String(error)
+}
 
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin') ?? ''; const permitted = allowed().includes(origin)
@@ -26,5 +34,8 @@ Deno.serve(async (request) => {
     const { error: updateError } = await db.from('reservation_payments').update({ preference_id: preference.id, checkout_url: preference.initPoint, updated_at: new Date().toISOString() }).eq('reservation_id', reservationId)
     if (updateError) throw updateError
     return json({ checkoutUrl: preference.initPoint, reservationId, expiresAt: payment.expires_at }, 201, origin)
-  } catch { return fail('service_unavailable', 503, origin) }
+  } catch (error) {
+    console.error('create_checkout_failed', errorSummary(error))
+    return fail('service_unavailable', 503, origin)
+  }
 })

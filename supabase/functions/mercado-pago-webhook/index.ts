@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { getPayment, verifyWebhookSignature } from '../_shared/mercado-pago.ts'
 import { createCalendarEvent } from '../_shared/google-calendar.ts'
+import { processConfirmationEmail } from './confirmation-email.ts'
 
 const json = (body: unknown, status: number) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } })
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -22,14 +23,22 @@ Deno.serve(async (request) => {
     const { error } = await db.rpc('apply_mercado_pago_payment', { p_reservation: payment.external_reference, p_payment_id: String(payment.id), p_status: payment.status, p_amount_cents: Math.round(payment.transaction_amount * 100), p_currency: payment.currency_id })
     if (error) return json({ error: 'payment_rejected' }, 409)
     if (payment.status === 'approved') {
+      try {
+        await processConfirmationEmail(db as never, payment.external_reference)
+      } catch (error) {
+        console.error('confirmation_email_processing_failed', error instanceof Error ? error.message : 'unknown_error')
+      }
       const { data: events, error: eventError } = await db.rpc('calendar_event_payload', { p_reservation: payment.external_reference })
       if (eventError) return json({ error: 'calendar_payload_error' }, 503)
       const event = events?.[0]
       if (event) {
         try {
-          const id = await createCalendarEvent({ reservationId: event.reservation_id, patientName: event.patient_name, mode: event.mode, startsAt: event.starts_at, endsAt: event.ends_at })
+          const id = await createCalendarEvent({ reservationId: event.reservation_id, patientName: event.patient_name, mode: event.mode, partnerName: event.partner_name, startsAt: event.starts_at, endsAt: event.ends_at })
           await db.from('reservations').update({ calendar_event_id: id, calendar_synced_at: new Date().toISOString() }).eq('id', event.reservation_id)
-        } catch { return json({ received: true, calendar: 'pending' }, 202) }
+        } catch (error) {
+          console.error('google_calendar_sync_failed', error instanceof Error ? error.message : 'unknown_error')
+          return json({ received: true, calendar: 'pending' }, 202)
+        }
       }
     }
     return json({ received: true }, 200)
