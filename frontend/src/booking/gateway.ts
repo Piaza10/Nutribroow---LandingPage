@@ -1,2 +1,2 @@
-import type { BookingMode, CheckoutRequest, CheckoutSession, PartnerAcademy, Reservation, ReservationInput, Slot } from './types'
-export interface BookingGateway { getPartner(code: string | null): Promise<PartnerAcademy | null>; getSlots(mode: BookingMode, academyCode?: string): Promise<Slot[]>; reserve(input: ReservationInput): Promise<Reservation>; createCheckout(input: CheckoutRequest): Promise<CheckoutSession> }
+import type { BookingMode, CheckoutRequest, CheckoutSession, PartnerAcademy, PaymentConfirmation, Reservation, ReservationInput, Slot } from './types'
+export interface BookingGateway { getPartner(code: string | null): Promise<PartnerAcademy | null>; getSlots(mode: BookingMode, academyCode?: string): Promise<Slot[]>; reserve(input: ReservationInput): Promise<Reservation>; createCheckout(input: CheckoutRequest): Promise<CheckoutSession>; getPaymentConfirmation(reservationId: string): Promise<PaymentConfirmation> }

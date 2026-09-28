@@ -4,6 +4,9 @@ type PublicError = 'invalid_request' | 'partner_required' | 'partner_not_found' 
 const json = (body: unknown, status = 200, origin?: string) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json', ...(origin ? { 'access-control-allow-origin': origin, vary: 'Origin' } : {}) } })
 const fail = (error: PublicError, status: number, origin?: string) => json({ error }, status, origin)
 const allowed = () => (Deno.env.get('ALLOWED_ORIGINS') ?? '').split(',').map((value) => value.trim()).filter(Boolean)
+const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+const nutritionistWhatsApp = () => Deno.env.get('NUTRITIONIST_WHATSAPP') ?? '5521980966678'
+const appointmentLabel = (startsAt: string) => new Intl.DateTimeFormat('pt-BR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(startsAt))
 
 Deno.serve(async (request) => {
   const origin = request.headers.get('origin') ?? ''
@@ -32,12 +35,23 @@ Deno.serve(async (request) => {
     }
     if (body.action === 'reserve' && body.input && typeof body.input === 'object') {
       const input = body.input as Record<string, unknown>
-      if (!['online','presencial'].includes(String(input.mode)) || typeof input.slotId !== 'string' || typeof input.name !== 'string' || typeof input.email !== 'string' || typeof input.phone !== 'string' || input.consentBooking !== true || input.consentSharing !== true) return fail('invalid_request', 400, origin)
+      if (!['online','presencial'].includes(String(input.mode)) || typeof input.slotId !== 'string' || typeof input.name !== 'string' || typeof input.email !== 'string' || typeof input.phone !== 'string' || typeof input.birthDate !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(input.birthDate) || !Number.isInteger(input.age) || Number(input.age) < 1 || Number(input.age) > 120 || input.consentBooking !== true || input.consentSharing !== true) return fail('invalid_request', 400, origin)
       let academyId: string | null = null
       if (input.academyCode) { const partner = await db.from('partner_academies').select('id').eq('code', input.academyCode).eq('active', true).maybeSingle(); if (partner.error) throw partner.error; if (!partner.data) return fail('partner_not_found', 404, origin); academyId = partner.data.id }
-      const { data, error } = await db.rpc('create_temporary_reservation', { p_slot: input.slotId, p_name: input.name.trim(), p_email: input.email.trim().toLowerCase(), p_phone: input.phone.replace(/\D/g,''), p_academy: academyId })
+      const { data, error } = await db.rpc('create_temporary_reservation', { p_slot: input.slotId, p_name: input.name.trim(), p_email: input.email.trim().toLowerCase(), p_phone: input.phone.replace(/\D/g,''), p_birth_date: input.birthDate, p_age: input.age, p_academy: academyId })
       if (error) { if (error.message.includes('slot_unavailable')) return fail('slot_unavailable', 409, origin); throw error }
       return json({ id: data.id, slotId: data.slot_id, mode: data.mode, status: data.status, expiresAt: data.expires_at }, 201, origin)
+    }
+    if (body.action === 'get-payment-confirmation' && uuid.test(String(body.reservationId))) {
+      const { data, error } = await db.from('reservations').select('status,mode,patients(name,phone,birth_date,age),availability_slots(starts_at),reservation_payments(plan_code)').eq('id', body.reservationId).maybeSingle()
+      if (error) throw error
+      if (!data || data.status !== 'confirmed') return json({ status: 'pending' }, 202, origin)
+      const patient = data.patients as unknown as { name: string; phone: string; birth_date: string | null; age: number | null } | null
+      const slot = data.availability_slots as unknown as { starts_at: string } | null
+      const payment = data.reservation_payments as unknown as { plan_code: string }[] | null
+      if (!patient || !slot) throw new Error('confirmation_payload_missing')
+      const message = [`Olá! Meu nome é ${patient.name}.`, '', 'Acabei de confirmar minha consulta Nutri Broow.', `Plano: ${payment?.[0]?.plan_code === 'consulta_trimensal' ? 'Consulta Trimestral' : 'Consulta Mensal'}.`, `Data e horário: ${appointmentLabel(slot.starts_at)}.`, `Modalidade: ${data.mode === 'online' ? 'Online' : 'Presencial'}.`, `Telefone: ${patient.phone}.`, patient.age ? `Idade: ${patient.age} anos.` : '', patient.birth_date ? `Data de nascimento: ${patient.birth_date.split('-').reverse().join('/')}.` : ''].filter(Boolean).join('\n')
+      return json({ status: 'confirmed', whatsappUrl: `https://wa.me/${nutritionistWhatsApp()}?text=${encodeURIComponent(message)}` }, 200, origin)
     }
     return fail('invalid_request', 400, origin)
   } catch { console.error(JSON.stringify({ event: 'public_booking_error' })); return fail('service_unavailable', 503, origin) }

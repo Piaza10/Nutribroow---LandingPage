@@ -5,8 +5,14 @@ import { isBookableSlot } from './time'
 describe('booking rules', () => {
   test('normalizes a Brazilian phone and validates required consents', () => {
     expect(normalizePhone('(21) 98096-6678')).toBe('21980966678')
-    expect(identitySchema.safeParse({ name: 'Ana Silva', email: 'ana@example.com', phone: '21980966678', consentBooking: true, consentSharing: true }).success).toBe(true)
-    expect(identitySchema.safeParse({ name: 'Ana Silva', email: 'ana@example.com', phone: '21980966678', consentBooking: false, consentSharing: true }).success).toBe(false)
+    const booking = { name: 'Ana Silva', email: 'ana@example.com', phone: '21980966678', birthDate: '1998-05-12', age: 28, consentBooking: true, consentSharing: true }
+    expect(identitySchema.safeParse(booking).success).toBe(true)
+    expect(identitySchema.safeParse({ ...booking, consentBooking: false }).success).toBe(false)
+  })
+  test('requires a valid birth date and matching age', () => {
+    const booking = { name: 'Ana Silva', email: 'ana@example.com', phone: '21980966678', birthDate: '1998-05-12', age: 28, consentBooking: true, consentSharing: true }
+    expect(identitySchema.safeParse({ ...booking, birthDate: '' }).success).toBe(false)
+    expect(identitySchema.safeParse({ ...booking, age: 0 }).success).toBe(false)
   })
   test('accepts slots from 24 hours through 60 days', () => {
     const now = new Date('2026-09-16T12:00:00.000Z')

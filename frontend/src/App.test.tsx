@@ -75,6 +75,8 @@ test('presents the booking journey as detailed numbered steps', async () => {
 
   expect(await screen.findByText('Escolha o tipo de atendimento')).toBeInTheDocument()
   expect(screen.getByText('Online ou presencial, quando disponível pela academia parceira.')).toBeInTheDocument()
+  expect(screen.getByRole('heading', { name: 'Do primeiro passo à confirmação.' })).toBeInTheDocument()
+  expect(screen.queryByText(/pré-avaliação/i)).not.toBeInTheDocument()
   expect(screen.getAllByRole('listitem')).toHaveLength(6)
 })
 
@@ -152,6 +154,8 @@ test('uses a concise phone label in the booking form', async () => {
   await user.click(screen.getByRole('button', { name: /continuar/i }))
 
   expect(await screen.findByLabelText('Telefone')).toBeInTheDocument()
+  expect(screen.getByLabelText('Data de nascimento')).toBeInTheDocument()
+  expect(screen.getByLabelText('Idade')).toBeInTheDocument()
   expect(screen.queryByLabelText('Telefone brasileiro')).not.toBeInTheDocument()
 })
 

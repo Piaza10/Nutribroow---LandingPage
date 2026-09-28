@@ -1,5 +1,5 @@
 import type { BookingGateway } from './gateway'
-import type { BookingMode, CheckoutRequest, CheckoutSession, PartnerAcademy, Reservation, ReservationInput, Slot } from './types'
+import type { BookingMode, CheckoutRequest, CheckoutSession, PartnerAcademy, PaymentConfirmation, Reservation, ReservationInput, Slot } from './types'
 
 type Config = { url: string; key: string }
 export class SupabaseBookingGateway implements BookingGateway {
@@ -13,6 +13,7 @@ export class SupabaseBookingGateway implements BookingGateway {
   async getPartner(code: string | null) { if (!code) return null; return this.request<PartnerAcademy | null>({ action: 'get-partner', code }) }
   async getSlots(mode: BookingMode, academyCode?: string) { return this.request<Slot[]>({ action: 'get-slots', mode, academyCode }) }
   async reserve(input: ReservationInput) { return this.request<Reservation>({ action: 'reserve', input }) }
+  async getPaymentConfirmation(reservationId: string) { return this.request<PaymentConfirmation>({ action: 'get-payment-confirmation', reservationId }) }
   async createCheckout(input: CheckoutRequest) {
     const response = await fetch(`${this.config.url}/functions/v1/create-checkout`, { method: 'POST', headers: { 'content-type': 'application/json', apikey: this.config.key }, body: JSON.stringify(input) })
     const payload = await response.json().catch(() => null) as { error?: string } | null
