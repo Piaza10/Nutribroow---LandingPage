@@ -123,6 +123,14 @@ test('uses icon-only social links and omits promotional footer copy', async () =
   expect(screen.queryByText('45 min consulta inicial')).not.toBeInTheDocument()
 })
 
+test('explains LGPD data handling and provides a privacy request channel', async () => {
+  render(<App />)
+
+  expect(await screen.findByRole('heading', { name: 'Privacidade e proteção de dados' })).toBeInTheDocument()
+  expect(screen.getByText(/até 5 anos após a última consulta/i)).toBeInTheDocument()
+  expect(screen.getByRole('link', { name: /solicitação lgpd/i })).toHaveAttribute('href', expect.stringContaining('agendamento@nutribroow.com'))
+})
+
 test('highlights practical strategies for the patient routine in the offer', async () => {
   render(<App />)
 
