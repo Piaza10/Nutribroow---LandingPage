@@ -43,14 +43,14 @@ Deno.serve(async (request) => {
       return json({ id: data.id, slotId: data.slot_id, mode: data.mode, status: data.status, expiresAt: data.expires_at }, 201, origin)
     }
     if (body.action === 'get-payment-confirmation' && uuid.test(String(body.reservationId))) {
-      const { data, error } = await db.from('reservations').select('status,mode,patients(name,phone,birth_date,age),availability_slots(starts_at),reservation_payments(plan_code)').eq('id', body.reservationId).maybeSingle()
+      const { data, error } = await db.from('reservations').select('status,mode,patients(name,email,phone,birth_date,age),availability_slots(starts_at),reservation_payments(plan_code)').eq('id', body.reservationId).maybeSingle()
       if (error) throw error
       if (!data || data.status !== 'confirmed') return json({ status: 'pending' }, 202, origin)
-      const patient = data.patients as unknown as { name: string; phone: string; birth_date: string | null; age: number | null } | null
+      const patient = data.patients as unknown as { name: string; email: string; phone: string; birth_date: string | null; age: number | null } | null
       const slot = data.availability_slots as unknown as { starts_at: string } | null
       const payment = data.reservation_payments as unknown as { plan_code: string }[] | null
       if (!patient || !slot) throw new Error('confirmation_payload_missing')
-      const message = [`Olá! Meu nome é ${patient.name}.`, '', 'Acabei de confirmar minha consulta Nutri Broow.', `Plano: ${payment?.[0]?.plan_code === 'consulta_trimensal' ? 'Consulta Trimestral' : 'Consulta Mensal'}.`, `Data e horário: ${appointmentLabel(slot.starts_at)}.`, `Modalidade: ${data.mode === 'online' ? 'Online' : 'Presencial'}.`, `Telefone: ${patient.phone}.`, patient.age ? `Idade: ${patient.age} anos.` : '', patient.birth_date ? `Data de nascimento: ${patient.birth_date.split('-').reverse().join('/')}.` : ''].filter(Boolean).join('\n')
+      const message = [`Olá! Meu nome é ${patient.name}.`, '', 'Acabei de confirmar minha consulta Nutri Broow.', `Plano: ${payment?.[0]?.plan_code === 'consulta_trimensal' ? 'Consulta Trimestral' : 'Consulta Mensal'}.`, `Data e horário: ${appointmentLabel(slot.starts_at)}.`, `Modalidade: ${data.mode === 'online' ? 'Online' : 'Presencial'}.`, `E-mail: ${patient.email}.`, `Telefone: ${patient.phone}.`, patient.age ? `Idade: ${patient.age} anos.` : '', patient.birth_date ? `Data de nascimento: ${patient.birth_date.split('-').reverse().join('/')}.` : ''].filter(Boolean).join('\n')
       return json({ status: 'confirmed', whatsappUrl: `https://wa.me/${nutritionistWhatsApp()}?text=${encodeURIComponent(message)}` }, 200, origin)
     }
     return fail('invalid_request', 400, origin)
