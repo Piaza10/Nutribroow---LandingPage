@@ -26,7 +26,8 @@ const slotDayKey = (startsAt: string) => new Intl.DateTimeFormat('en-CA', { year
 const slotDayLabel = (startsAt: string) => new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' }).format(new Date(startsAt))
 const slotDayShortLabel = (startsAt: string) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'America/Sao_Paulo' }).format(new Date(startsAt))
 const slotTimeLabel = (startsAt: string) => new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'America/Sao_Paulo' }).format(new Date(startsAt))
-const isOnlineLunchSlot = (slot: Slot) => slot.mode === 'online' && slotTimeLabel(slot.startsAt) === '12:00'
+const slotWeekday = (startsAt: string) => new Intl.DateTimeFormat('en-US', { weekday: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(startsAt))
+const isHiddenOnlineSlot = (slot: Slot) => slot.mode === 'online' && ((slotTimeLabel(slot.startsAt) === '12:00' && slotWeekday(slot.startsAt) !== 'Sat') || (slotTimeLabel(slot.startsAt) === '19:00' && slotWeekday(slot.startsAt) === 'Wed'))
 
 export default function App() {
   const [partner, setPartner] = useState<PartnerAcademy | null>(null); const [partnerReady, setPartnerReady] = useState(false)
@@ -36,7 +37,7 @@ export default function App() {
   const paymentReservationId = useMemo(() => { const search = new URLSearchParams(window.location.search); return search.get('pagamento') === 'success' ? search.get('reserva') : null }, [])
   const [paymentReturnError, setPaymentReturnError] = useState('')
   const form = useForm<FormValues>({ resolver: zodResolver(identitySchema) as never, defaultValues: { name: '', email: '', phone: '', birthDate: '', age: undefined, consentBooking: false, consentSharing: false } })
-  const loadSlots = async (next: BookingMode) => { setMode(next); setSelected(null); setSelectedDay(null); setError(''); try { const availableSlots = (await gateway.getSlots(next, partner?.code)).filter(slot => !isOnlineLunchSlot(slot)); setSlots(availableSlots); setSelectedDay(availableSlots[0] ? slotDayKey(availableSlots[0].startsAt) : null) } catch (e) { setError(bookingErrorMessage((e as { code?: string }).code || 'service_unavailable')) } }
+  const loadSlots = async (next: BookingMode) => { setMode(next); setSelected(null); setSelectedDay(null); setError(''); try { const availableSlots = (await gateway.getSlots(next, partner?.code)).filter(slot => !isHiddenOnlineSlot(slot)); setSlots(availableSlots); setSelectedDay(availableSlots[0] ? slotDayKey(availableSlots[0].startsAt) : null) } catch (e) { setError(bookingErrorMessage((e as { code?: string }).code || 'service_unavailable')) } }
   useEffect(() => { gateway.getPartner(code).then(setPartner).finally(() => setPartnerReady(true)) }, [code])
   // The initial load deliberately runs once after partner resolution; user actions invoke loadSlots afterwards.
   // eslint-disable-next-line react-hooks/exhaustive-deps

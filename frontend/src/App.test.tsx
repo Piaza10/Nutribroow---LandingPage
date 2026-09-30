@@ -11,6 +11,9 @@ vi.mock('./booking/create-gateway', () => ({
       { id: 'online-2', mode: 'online', startsAt: '2026-09-25T14:00:00.000Z', endsAt: '2026-09-25T14:45:00.000Z' },
       { id: 'online-lunch', mode: 'online', startsAt: '2026-09-25T15:00:00.000Z', endsAt: '2026-09-25T15:45:00.000Z' },
       { id: 'online-3', mode: 'online', startsAt: '2026-09-28T12:00:00.000Z', endsAt: '2026-09-28T12:45:00.000Z' },
+      { id: 'online-wednesday-19', mode: 'online', startsAt: '2026-10-07T22:00:00.000Z', endsAt: '2026-10-07T22:45:00.000Z' },
+      { id: 'online-saturday-11', mode: 'online', startsAt: '2026-10-10T14:00:00.000Z', endsAt: '2026-10-10T14:45:00.000Z' },
+      { id: 'online-saturday-12', mode: 'online', startsAt: '2026-10-10T15:00:00.000Z', endsAt: '2026-10-10T15:45:00.000Z' },
     ]),
     reserve: vi.fn(),
     createCheckout: vi.fn(),
@@ -222,4 +225,16 @@ test('does not show the online lunch appointment time', async () => {
   await user.click((await screen.findAllByRole('button', { name: /escolher este plano/i }))[0])
 
   expect(screen.queryByRole('button', { name: /sexta-feira, 25 de setembro de 2026 às 12:00/i })).not.toBeInTheDocument()
+})
+
+test('offers Saturday 11:00 and 12:00 while hiding Wednesday 19:00', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+
+  await user.click((await screen.findAllByRole('button', { name: /escolher este plano/i }))[0])
+  expect(screen.queryByRole('button', { name: /quarta-feira, 7 de outubro de 2026/i })).not.toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: /sábado, 10 de outubro de 2026/i }))
+  expect(await screen.findByRole('button', { name: /sábado, 10 de outubro de 2026 às 11:00/i })).toBeInTheDocument()
+  expect(screen.getByRole('button', { name: /sábado, 10 de outubro de 2026 às 12:00/i })).toBeInTheDocument()
 })
