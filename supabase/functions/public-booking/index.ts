@@ -27,9 +27,8 @@ Deno.serve(async (request) => {
       return json(data, 200, origin)
     }
     if (body.action === 'get-slots' && (body.mode === 'online' || body.mode === 'presencial')) {
-      if (body.mode === 'presencial' && typeof body.academyCode !== 'string') return fail('partner_required', 400, origin)
       let academyId: string | null = null
-      if (body.mode === 'presencial') { const partner = await db.from('partner_academies').select('id').eq('code', body.academyCode).eq('active', true).maybeSingle(); if (partner.error) throw partner.error; if (!partner.data) return fail('partner_not_found', 404, origin); academyId = partner.data.id }
+      if (body.mode === 'presencial' && typeof body.academyCode === 'string') { const partner = await db.from('partner_academies').select('id').eq('code', body.academyCode).eq('active', true).maybeSingle(); if (partner.error) throw partner.error; if (!partner.data) return fail('partner_not_found', 404, origin); academyId = partner.data.id }
       const { data, error } = await db.rpc('get_available_slots', { p_mode: body.mode, p_academy: academyId }); if (error) throw error
       return json((data ?? []).map((slot) => ({ id: slot.id, mode: slot.mode, startsAt: slot.starts_at, endsAt: slot.ends_at })), 200, origin)
     }

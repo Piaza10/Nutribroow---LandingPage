@@ -77,7 +77,7 @@ test('presents the booking journey as detailed numbered steps', async () => {
   render(<App />)
 
   expect(await screen.findByText('Escolha o tipo de atendimento')).toBeInTheDocument()
-  expect(screen.getByText('Online ou presencial, quando disponível pela academia parceira.')).toBeInTheDocument()
+  expect(screen.getByText('Online ou presencial no consultório próprio; QR de parceiro mantém os benefícios da academia.')).toBeInTheDocument()
   expect(screen.getByRole('heading', { name: 'Do primeiro passo à confirmação.' })).toBeInTheDocument()
   expect(screen.queryByText(/pré-avaliação/i)).not.toBeInTheDocument()
   expect(screen.getAllByRole('listitem')).toHaveLength(6)
@@ -115,6 +115,16 @@ test('guides the patient through selecting a plan before booking', async () => {
 
   await user.click(screen.getAllByRole('button', { name: /escolher este plano/i })[0])
   expect(await screen.findByRole('button', { name: /alterar plano/i })).toBeInTheDocument()
+})
+
+test('offers in-person appointments without requiring a partner QR code', async () => {
+  const user = userEvent.setup()
+  render(<App />)
+
+  await user.click((await screen.findAllByRole('button', { name: /escolher este plano/i }))[0])
+
+  expect(screen.getByRole('button', { name: 'Presencial' })).toBeEnabled()
+  expect(screen.getByText(/atendimento presencial no consultório próprio/i)).toBeInTheDocument()
 })
 
 test('uses icon-only social links and omits promotional footer copy', async () => {
