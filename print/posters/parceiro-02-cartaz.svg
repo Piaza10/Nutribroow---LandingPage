@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="210mm" height="297mm" viewBox="0 0 794 1123" role="img" aria-labelledby="title description">
+  <title id="title">Cartaz NutriBroow — parceiro 02</title>
+  <desc id="description">Cartaz A4 com QR code para agendar uma consulta com a NutriBroow.</desc>
+  <rect width="794" height="1123" fill="#f8f4ed"/>
+  <rect x="34" y="34" width="726" height="1055" rx="30" fill="#fffdf9" stroke="#ec6413" stroke-width="4"/>
+  <image href="../../frontend/src/assets/nutri-broow-logo-transparent.png" x="289" y="68" width="216" height="116" preserveAspectRatio="xMidYMid meet"/>
+  <text x="397" y="248" fill="#1f1915" font-family="Arial, sans-serif" font-size="34" font-weight="700" text-anchor="middle">Fale com nosso nutricionista</text>
+  <text x="397" y="292" fill="#ec6413" font-family="Arial, sans-serif" font-size="40" font-weight="800" text-anchor="middle">NutriBroow</text>
+  <line x1="142" y1="335" x2="652" y2="335" stroke="#e8d9c9" stroke-width="2"/>
+  <text x="397" y="389" fill="#342923" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">Aponte a câmera para o QR code</text>
+  <text x="397" y="422" fill="#342923" font-family="Arial, sans-serif" font-size="24" text-anchor="middle">e agende sua consulta.</text>
+  <rect x="165" y="461" width="464" height="464" rx="26" fill="#ffffff" stroke="#f0e3d6" stroke-width="3"/>
+  <image href="../qr/parceiro-02.svg" x="192" y="488" width="410" height="410" preserveAspectRatio="xMidYMid meet"/>
+  <text x="397" y="973" fill="#1f1915" font-family="Arial, sans-serif" font-size="20" font-weight="700" text-anchor="middle">Consultas online e presenciais no consultório</text>
+  <rect x="100" y="1015" width="594" height="1" fill="#e8d9c9"/>
+  <text x="100" y="1054" fill="#342923" font-family="Arial, sans-serif" font-size="20" font-weight="700">Academia parceira:</text>
+  <line x1="300" y1="1058" x2="694" y2="1058" stroke="#342923" stroke-width="2"/>
+  <text x="397" y="1083" fill="#876e5c" font-family="Arial, sans-serif" font-size="13" text-anchor="middle">Código reservado: parceiro-02</text>
+</svg>
