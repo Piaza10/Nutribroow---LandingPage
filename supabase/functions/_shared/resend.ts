@@ -34,3 +34,14 @@ export async function sendConfirmationEmail(input: ConfirmationEmailInput) {
   if (!response.ok || !payload?.id) throw new Error(`resend_email_${response.status}`)
   return { id: payload.id }
 }
+
+export async function sendDeliveryMonitorAlert(input: { to: string; reservationIds: string[] }) {
+  const apiKey = Deno.env.get('RESEND_API_KEY')
+  const from = Deno.env.get('RESEND_FROM_EMAIL')
+  if (!apiKey || !from) throw new Error('resend_config')
+  const text = `Foram identificadas ${input.reservationIds.length} confirmações de pagamento sem e-mail de confirmação enviado. IDs internos: ${input.reservationIds.join(', ')}.`
+  const response = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json' }, body: JSON.stringify({ from, to: [input.to], subject: 'Alerta: confirmação de e-mail pendente', text }) })
+  const payload = await response.json().catch(() => null) as { id?: string } | null
+  if (!response.ok || !payload?.id) throw new Error(`resend_email_${response.status}`)
+  return { id: payload.id }
+}
