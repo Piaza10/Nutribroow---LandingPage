@@ -6,6 +6,7 @@ type ConfirmationPayload = {
   patient_name: string
   patient_email: string
   mode: string
+  unit_name: string
   starts_at: string
   ends_at: string
 }
@@ -19,6 +20,7 @@ type EmailSender = (input: {
   email: string
   patientName: string
   mode: string
+  unitName: string
   startsAt: string
   endsAt: string
 }) => Promise<{ id: string }>
@@ -35,6 +37,7 @@ export async function processConfirmationEmail(db: Database, reservationId: stri
       email: notification.patient_email,
       patientName: notification.patient_name,
       mode: notification.mode,
+      unitName: notification.unit_name,
       startsAt: notification.starts_at,
       endsAt: notification.ends_at,
     })

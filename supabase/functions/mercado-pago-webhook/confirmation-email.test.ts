@@ -6,6 +6,7 @@ const payload = {
   patient_name: 'Ana Silva',
   patient_email: 'ana@example.com',
   mode: 'online',
+  unit_name: 'Consultório próprio',
   starts_at: '2026-10-01T15:00:00.000Z',
   ends_at: '2026-10-01T15:45:00.000Z',
 }
@@ -20,9 +21,11 @@ Deno.test('approved payment sends one email and marks its notification sent', as
     },
   }
 
-  const result = await processConfirmationEmail(db, 'reservation-1', async () => ({ id: 'email-1' }))
+  let sentInput: Record<string, unknown> | undefined
+  const result = await processConfirmationEmail(db, 'reservation-1', async (input) => { sentInput = input; return { id: 'email-1' } })
 
   if (result !== 'sent') throw new Error('expected email sent result')
+  if (sentInput?.unitName !== 'Consultório próprio') throw new Error('expected appointment unit in email payload')
   const completion = calls.find((call) => call.name === 'complete_confirmation_email')
   if (!completion || completion.args.p_provider_id !== 'email-1' || completion.args.p_error !== null) throw new Error('expected sent notification completion')
 })
